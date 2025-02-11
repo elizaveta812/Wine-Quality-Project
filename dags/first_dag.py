@@ -4,15 +4,19 @@ from airflow.operators.python_operator import PythonOperator
 from datetime import datetime, timedelta
 import pickle 
 
+
 # загружаю данные
 def load_data():
-    print("Представим, что тут загрузились данные о вине...")
-    return pd.DataFrame()
+    import pandas as pd
+    print("Загрузили данные о красном вине")
+    return pd.read_csv('data/winequality-red.csv')
+
 
 # обучаю модель
 def train_model(data):
     print("Представим, что тут обучилась модель...")
     return "path/to/model.pkl"
+
 
 # сохраняю модель
 def save_model(model, model_path):
