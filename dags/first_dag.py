@@ -6,6 +6,8 @@ import pickle
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.ensemble import RandomForestRegressor
+import boto3
+from botocore.exceptions import NoCredentialsError
 
 
 # загружаю данные
@@ -49,16 +51,28 @@ def train_model(**kwargs):
 
     print("Обучили лучшую модель на лучших параметрах")
 
-    model_path = 'mlops-project-el-zimina/random_forest_model.pkl'
-    return random_forest_model, model_path
+    return random_forest_model
 
 
-# сохраняю модель
-def save_model(model, model_path):
-    with open(model_path, 'wb') as file:
-        pickle.dump(model, file)  
-    print(f"Модель сохранена по пути: {model_path}")
+# сохраняю модель в минё
+def save_model(model):
+    s3_client = boto3.client('s3',
+                             endpoint_url='https://s3.lab.karpov.courses',
+                             aws_access_key_id='FLQ92JctrzqXRKchZbqm',
+                             aws_secret_access_key='fLePd1XLNkin1Qgm1OFZwPieANSWs0NG5uBUgCSk')
 
+    model_path = 'models/wine_quality_model.pkl'
+
+    # сохраняю модель в локальный файл
+    with open('/tmp/wine_quality_model.pkl', 'wb') as file:
+        pickle.dump(model, file)
+
+    # загружаю в минё
+    try:
+        s3_client.upload_file('/tmp/wine_quality_model.pkl', 'el-zimina', model_path)
+        print(f"Модель сохранена в MinIO по пути: {model_path}")
+    except NoCredentialsError:
+        print("Ошибка: Неверные учетные данные для доступа к MinIO")
 
 
 # определяю даг
@@ -95,9 +109,8 @@ save_model_task = PythonOperator(
     task_id='save_model',
     python_callable=save_model,
     op_kwargs={
-        'model': '{{ task_instance.xcom_pull(task_ids="train_model")[0] }}',  
-        'model_path': '{{ task_instance.xcom_pull(task_ids="train_model")[1] }}'  
-        }, 
+        'model': '{{ task_instance.xcom_pull(task_ids="train_model") }}'
+        },
     dag=dag,
 )
 
