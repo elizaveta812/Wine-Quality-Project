@@ -8,6 +8,7 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.ensemble import RandomForestRegressor
 import boto3
 from botocore.exceptions import NoCredentialsError
+import os
 
 
 # загружаю данные
@@ -54,12 +55,17 @@ def train_model(**kwargs):
     return random_forest_model
 
 
+# получаю переменные окружения
+aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
+aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+
+
 # сохраняю модель в минё
 def save_model(model):
     s3_client = boto3.client('s3',
                              endpoint_url='https://s3.lab.karpov.courses',
-                             aws_access_key_id='FLQ92JctrzqXRKchZbqm',
-                             aws_secret_access_key='fLePd1XLNkin1Qgm1OFZwPieANSWs0NG5uBUgCSk')
+                             aws_access_key_id=aws_access_key_id,
+                             aws_secret_access_key=aws_secret_access_key)
 
     model_path = 'models/wine_quality_model.pkl'
 
