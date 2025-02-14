@@ -1,7 +1,7 @@
 [core]
     remote = s3_mlops
 ['remote "s3_mlops"']
-    url = s3://el-zimina/final_project
+    url = s3://el-zimina
     use_ssl = true
     endpointurl = https://s3.lab.karpov.courses
     access_key_id = FLQ92JctrzqXRKchZbqm
