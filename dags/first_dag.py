@@ -11,10 +11,34 @@ from botocore.exceptions import NoCredentialsError
 import os
 
 
-# загружаю данные
+# получаю переменные окружения
+aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
+aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+
+
+# настройка клиента минё
+s3_client = boto3.client('s3',
+                          endpoint_url='https://s3.lab.karpov.courses',
+                          aws_access_key_id=aws_access_key_id,
+                          aws_secret_access_key=aws_secret_access_key)
+
+
+# загружаю данные из минё
 def load_data():
-    print("Загрузили данные о красном вине")
-    return pd.read_csv('data/winequality-red.csv')
+    try:
+        bucket_name = 'el-zimina'
+        object_key = 'data/winequality-red.csv'
+        local_file_path = '/tmp/winequality-red.csv'
+
+        s3_client.download_file(bucket_name, object_key, local_file_path)
+
+        data = pd.read_csv(local_file_path)
+        print("Загрузили данные о красном вине из MinIO")
+        return data
+    except NoCredentialsError:
+        print("Ошибка: Неверные учетные данные для доступа к MinIO")
+    except Exception as e:
+        print(f"Ошибка при загрузке данных: {e}")
 
 
 # обучаю модель
@@ -55,18 +79,8 @@ def train_model(**kwargs):
     return random_forest_model
 
 
-# получаю переменные окружения
-aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
-aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
-
-
 # сохраняю модель в минё
 def save_model(model):
-    s3_client = boto3.client('s3',
-                             endpoint_url='https://s3.lab.karpov.courses',
-                             aws_access_key_id=aws_access_key_id,
-                             aws_secret_access_key=aws_secret_access_key)
-
     model_path = 'models/wine_quality_model.pkl'
 
     # сохраняю модель в локальный файл
@@ -79,6 +93,8 @@ def save_model(model):
         print(f"Модель сохранена в MinIO по пути: {model_path}")
     except NoCredentialsError:
         print("Ошибка: Неверные учетные данные для доступа к MinIO")
+    except Exception as e:
+        print(f"Ошибка при загрузке модели: {e}")
 
 
 # определяю даг
