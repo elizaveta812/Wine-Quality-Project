@@ -6,11 +6,16 @@ import os
 
 app = FastAPI()
 
+
+# получаю переменные окружения
+aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
+aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+
 # настройка клиента минё
 s3_client = boto3.client('s3',
                           endpoint_url='https://s3.lab.karpov.courses',
-                          aws_access_key_id='FLQ92JctrzqXRKchZbqm',
-                          aws_secret_access_key='fLePd1XLNkin1Qgm1OFZwPieANSWs0NG5uBUgCSk')
+                          aws_access_key_id=aws_access_key_id,
+                          aws_secret_access_key=aws_secret_access_key)
 
 # параметры для загрузки модели
 bucket_name = 'el-zimina'
