@@ -1,0 +1,30 @@
+stages:
+  - lint
+  - test
+
+lint:
+  stage: lint
+  image: python:3.8
+  script:
+    - pip install flake8
+    - flake8 src/
+  only:
+    - merge_requests
+
+dvc_pull:
+  stage: test
+  image: python:3.8
+  script:
+    - pip install dvc
+    - dvc pull
+  only:
+    - merge_requests
+
+test:
+  stage: test
+  image: python:3.8
+  script:
+    - pip install pytest
+    - pytest tests/
+  only:
+    - merge_requests
