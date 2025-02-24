@@ -22,19 +22,33 @@ bucket_name = 'el-zimina'
 model_key = 'models/wine_quality_model.pkl'
 local_model_path = '/tmp/wine_quality_model.pkl'
 
+model = None
+
 
 # загружаю модель из минё
-def load_model():
+async def load_model():
+    global model
     try:
         s3_client.download_file(bucket_name, model_key, local_model_path)
         with open(local_model_path, 'rb') as file:
             model = pickle.load(file)
-        return model
     except Exception as e:
         raise RuntimeError(f"Ошибка при загрузке модели: {e}")
 
 
-model = load_model()
+async def unload_model():
+    global model
+    model = None
+
+
+@app.on_event("startup")
+async def startup_event():
+    await load_model()
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    await unload_model()
 
 
 # валидация входных данных
@@ -54,6 +68,9 @@ class WineFeatures(BaseModel):
 
 @app.post("/predict")
 def predict(data: WineFeatures) -> float:
+    if model is None:
+        raise HTTPException(status_code=500, detail="Модель не загружена.")
+
     try:
         features = [[
             data.fixed_acidity,
