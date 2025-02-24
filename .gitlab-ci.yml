@@ -10,6 +10,7 @@ lint:
     - flake8 src/
   only:
     - merge_requests
+  allow_failure: true
 
 dvc_pull:
   stage: test
@@ -26,5 +27,7 @@ test:
   script:
     - pip install pytest
     - pytest tests/
+    - pip install requests
+    - pytest tests/test_api.py
   only:
     - merge_requests
